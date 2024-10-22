@@ -4,7 +4,7 @@ import uuid
 import aiohttp
 from bs4 import BeautifulSoup
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from app.models import Record
 
@@ -52,7 +52,15 @@ async def view_page_object(request, uid):
 
 async def list_page_objects(request):
 
-    order = request.GET.get('order', '-created_at')
+    order = request.GET.get('order', 'created_at')
+
+    if order.lstrip('-') not in ['created_at', 'h1', 'h2', 'h3', 'a']:
+        return HttpResponseBadRequest('order parameter is not valid')
+    
+    if order.startswith('-'):
+        order = order[1:]
+    else:
+        order = f'-{order}'
 
     records = []
 
